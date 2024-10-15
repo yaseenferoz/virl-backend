@@ -20,6 +20,11 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 // app.js
+app.use('/api/test',(req,res)=>{
+    return res.status(200).json({
+        message:"Server is Up and running"
+    })
+});
 const vendorRoutes = require('./routes/vendorRoutes');
 app.use('/api/vendor', vendorRoutes);
 // app.js
