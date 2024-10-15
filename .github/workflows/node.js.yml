@@ -29,3 +29,4 @@ jobs:
         touch .env
         echo "VIRL_PROD_ENV=${{ secrets.VIRL_PROD_ENV }}" >> .env
         echo "Secret value (masked): ${VIRL_PROD_ENV:0:5}..."  # Masked output for checking
+    - run: pm2 restart BackendAPI
