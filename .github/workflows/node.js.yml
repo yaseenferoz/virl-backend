@@ -30,4 +30,9 @@ jobs:
         echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
         echo "PORT=5000" >> .env
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+    - run: |
+        echo "Checking secrets..."
+        echo "MONGO_URI is: ${MONGO_URI:0:5}..."
+        echo "JWT_SECRET is: ${JWT_SECRET:0:5}..."
+
     - run: pm2 restart BackendApi
