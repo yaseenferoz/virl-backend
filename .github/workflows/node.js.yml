@@ -27,6 +27,7 @@ jobs:
     - run: npm ci
     - run: |
         touch .env
-        echo "VIRL_PROD_ENV=${{ secrets.VIRL_PROD_ENV }}" >> .env
-        echo "Secret value (masked): ${VIRL_PROD_ENV:0:5}..."  # Masked output for checking
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "PORT=5000" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
     - run: pm2 restart BackendApi
