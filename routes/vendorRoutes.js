@@ -53,6 +53,7 @@ router.get('/users', async (req, res) => {
   const { page = 1, limit = 5, search = '', role = '' } = req.query;
 
   try {
+    // Exclude vendor from the query
     const query = {
       $and: [
         {
@@ -63,7 +64,8 @@ router.get('/users', async (req, res) => {
             { role: { $regex: search, $options: 'i' } }
           ]
         },
-        role ? { role } : {} // Apply role filter if provided
+        role ? { role } : {}, // Apply role filter if provided
+        { role: { $ne: 'vendor' } } // Exclude vendors
       ]
     };
 
@@ -85,16 +87,24 @@ router.get('/users', async (req, res) => {
 });
 
 // Delete a user
-// Delete a user by ID
 router.delete('/delete-user/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const deletedUser = await User.findByIdAndDelete(userId);
+    // Find the user to check their role
+    const userToDelete = await User.findById(userId);
 
-    if (!deletedUser) {
+    if (!userToDelete) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Prevent deletion of vendor users
+    if (userToDelete.role === 'vendor') {
+      return res.status(403).json({ message: 'Cannot delete vendor users' });
+    }
+
+    // Proceed to delete if not a vendor
+    await User.findByIdAndDelete(userId);
 
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
