@@ -48,6 +48,61 @@ router.delete('/decline-user', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
+// Get users with pagination, search, and role filter
+router.get('/users', async (req, res) => {
+  const { page = 1, limit = 5, search = '', role = '' } = req.query;
+
+  try {
+    const query = {
+      $and: [
+        {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { phone: { $regex: search, $options: 'i' } },
+            { role: { $regex: search, $options: 'i' } }
+          ]
+        },
+        role ? { role } : {} // Apply role filter if provided
+      ]
+    };
+
+    const users = await User.find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const totalUsers = await User.countDocuments(query);
+
+    res.status(200).json({
+      users,
+      totalUsers,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalUsers / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error });
+  }
+});
+
+// Delete a user
+// Delete a user by ID
+router.delete('/delete-user/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting user', error });
+  }
+});
+
+
 // Route to fetch users awaiting approval (vendor only)
 router.get('/users-awaiting-approval', authenticateToken, authorizeRole('vendor'), async (req, res) => {
   try {
