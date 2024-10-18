@@ -29,7 +29,7 @@ router.post('/approve-user', authenticateToken, authorizeRole('vendor'), async (
 router.get('/users-awaiting-approval', authenticateToken, authorizeRole('vendor'), async (req, res) => {
   try {
     // Find users with pending approval (e.g., not yet approved)
-    const users = await User.find({ isApproved: false, role: { $in: ['customer', 'collector'] } });
+    const users = await User.find({ isActive: false, role: { $in: ['customer', 'collector'] } });
 
     res.status(200).json({ users });
   } catch (error) {
