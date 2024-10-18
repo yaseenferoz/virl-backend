@@ -25,6 +25,18 @@ router.post('/approve-user', authenticateToken, authorizeRole('vendor'), async (
     res.status(500).json({ message: 'Server error' });
   }
 });
+// Route to fetch users awaiting approval (vendor only)
+router.get('/users-awaiting-approval', authenticateToken, authorizeRole('vendor'), async (req, res) => {
+  try {
+    // Find users with pending approval (e.g., not yet approved)
+    const users = await User.find({ isApproved: false, role: { $in: ['customer', 'collector'] } });
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error('Error fetching users awaiting approval:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Route to update sample availability status
 
