@@ -3,6 +3,7 @@ const express = require('express');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 const SampleRequest = require('../models/SampleRequest'); // Assuming sample requests are stored in this model
 const User = require('../models/User'); // Adjust the path to your User model if needed
+const bcrypt = require('bcryptjs'); // For password hashing
 
 const router = express.Router();
 // routes/collectorRoutes.js
@@ -11,22 +12,27 @@ const Notification = require('../models/Notification'); // Ensure this import is
 // routes/collectorRoutes.js
 
 // Route to mark sample as collected by collector
-router.put('/collect-sample', authenticateToken, authorizeRole('collector'), async (req, res) => {
-  const { sampleRequestId } = req.body;
+router.put('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
+  const { name, password } = req.body;
 
   try {
-    const sampleRequest = await SampleRequest.findByIdAndUpdate(
-      sampleRequestId,
-      { status: 'Collected', collectorId: req.user.userId }, // Add collectorId here
-      { new: true }
-    );
-
-    if (!sampleRequest) {
-      return res.status(404).json({ message: 'Sample request not found' });
+    // Only update the allowed fields (name and password)
+    const updates = {};
+    if (name) updates.name = name;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password, salt); // Hash the new password
     }
 
-    res.status(200).json({ message: 'Sample status updated to Collected', sampleRequest });
+    const updatedUser = await User.findByIdAndUpdate(req.user.userId, updates, { new: true }).select('name email phone');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', profile: updatedUser });
   } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
