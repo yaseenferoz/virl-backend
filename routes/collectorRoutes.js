@@ -110,7 +110,7 @@ router.get('/samples-to-collect', authenticateToken, authorizeRole('collector'),
 router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), async (req, res) => {
   try {
     // Fetch samples that were delivered by this collector, regardless of current status
-    const samplesDelivered = await SampleRequest.find({ collectorId: req.user.userId, status: { $ne: 'Submitted' } })
+    const samplesDelivered = await SampleRequest.find({ collectorId: req.user.userId, status: { $ne: 'Sample Received' } })
       .populate('sampleId', 'type description') // Populate sample type and description
       .populate('customerId', 'name'); // Populate customer name
 
@@ -118,9 +118,9 @@ router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), 
     const formattedSamples = samplesDelivered.map((sample) => {
       return {
         sampleRequestId: sample._id,
-        sampleType: sample.sampleId.type,
-        description: sample.sampleId.description,
-        customerName: sample.customerId.name,
+        sampleType: sample.sampleId?.type || 'Unknown',  // Ensure sampleId exists
+        description: sample.sampleId?.description || 'No description available', // Fallback for missing description
+        customerName: sample.customerId?.name || 'Unknown Customer', // Handle null customerId gracefully
         submissionDate: sample.submittedAt,
         status: sample.status,
       };
@@ -132,6 +132,7 @@ router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), 
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 // routes/collectorRoutes.js
 
 // Route to get all notifications for the collector
