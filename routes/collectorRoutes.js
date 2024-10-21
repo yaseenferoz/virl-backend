@@ -2,6 +2,7 @@
 const express = require('express');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 const SampleRequest = require('../models/SampleRequest'); // Assuming sample requests are stored in this model
+const User = require('../models/User'); // Adjust the path to your User model if needed
 
 const router = express.Router();
 // routes/collectorRoutes.js
