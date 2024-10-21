@@ -10,7 +10,25 @@ const router = express.Router();
 const Notification = require('../models/Notification'); // Ensure this import is added
 
 // routes/collectorRoutes.js
+router.put('/collect-sample', authenticateToken, authorizeRole('collector'), async (req, res) => {
+  const { sampleRequestId } = req.body;
 
+  try {
+    const sampleRequest = await SampleRequest.findByIdAndUpdate(
+      sampleRequestId,
+      { status: 'Collected', collectorId: req.user.userId }, // Add collectorId here
+      { new: true }
+    );
+
+    if (!sampleRequest) {
+      return res.status(404).json({ message: 'Sample request not found' });
+    }
+
+    res.status(200).json({ message: 'Sample status updated to Collected', sampleRequest });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // Route to mark sample as collected by collector
 router.put('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
   const { name, password } = req.body;
