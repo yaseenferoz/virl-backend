@@ -104,13 +104,39 @@ router.get('/samples-to-collect', authenticateToken, authorizeRole('collector'),
     res.status(500).json({ message: 'Server error' });
   }
 });
+// Route to get all collected samples
+router.get('/samples-collected', authenticateToken, authorizeRole('collector'), async (req, res) => {
+  try {
+    const samplesCollected = await SampleRequest.find({ status: 'Collected' })
+      .populate('sampleId', 'type description') // Populate sample type and description
+      .populate('customerId', 'name'); // Populate customer name
+
+    // Format response with relevant details
+    const formattedSamples = samplesCollected.map((sample) => {
+      return {
+        sampleRequestId: sample._id,
+        sampleType: sample.sampleId?.type || 'Unknown',
+        description: sample.sampleId?.description || 'No description available',
+        customerName: sample.customerId?.name || 'Unknown Customer',
+        submissionDate: sample.submittedAt,
+        status: sample.status,
+      };
+    });
+
+    res.status(200).json({ samplesCollected: formattedSamples });
+  } catch (error) {
+    console.error('Error fetching collected samples:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 /// routes/collectorRoutes.js
 
 // Route to get all samples delivered to the vendor by this collector
 router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), async (req, res) => {
   try {
     // Fetch samples that were delivered by this collector, regardless of current status
-    const samplesDelivered = await SampleRequest.find({ collectorId: req.user.userId, status: { $ne: 'Sample Received' } })
+    const samplesDelivered = await SampleRequest.find({ collectorId: req.user.userId, status: { $ne: 'Collected' } })
       .populate('sampleId', 'type description') // Populate sample type and description
       .populate('customerId', 'name'); // Populate customer name
 
