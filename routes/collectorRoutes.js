@@ -78,7 +78,44 @@ router.put('/deliver-sample', authenticateToken, authorizeRole('collector'), asy
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.get('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('name email phone'); // Restrict fields if needed
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
+    res.status(200).json({ profile: user });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Route to update customer profile information
+router.put('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
+  const { name, password } = req.body;
+
+  try {
+    // Only update the allowed fields (name and password)
+    const updates = {};
+    if (name) updates.name = name;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password, salt); // Hash the new password
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.userId, updates, { new: true }).select('name email phone');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', profile: updatedUser });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // Route to get all submitted samples awaiting collection
 router.get('/samples-to-collect', authenticateToken, authorizeRole('collector'), async (req, res) => {
   try {
