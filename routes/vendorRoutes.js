@@ -229,19 +229,20 @@ router.get('/submitted-samples', authenticateToken, authorizeRole('vendor'), asy
 
     const formattedSamples = samples.map((sample) => {
       return {
-        sampleId: sample.sampleId ? sample.sampleId._id : null, // Check for null
-        sampleType: sample.sampleId ? sample.sampleId.type : 'Unknown', // Handle null sampleId
+        _id: sample._id,  // Include the _id of the SampleRequest
+        sampleId: sample.sampleId ? sample.sampleId._id : null,  // Keep sampleId if needed, but add _id for sampleRequest
+        sampleType: sample.sampleId ? sample.sampleId.type : 'Unknown',
         description: sample.sampleId ? sample.sampleId.description : 'No description',
-        customerName: sample.customerId ? sample.customerId.name : 'Unknown Customer', // Handle null customerId
+        customerName: sample.customerId ? sample.customerId.name : 'Unknown Customer',
         submissionDate: sample.submittedAt || 'Unknown submission date',
         status: sample.status || 'Unknown status',
-        collectorName: sample.collectorId ? sample.collectorId.name : 'Waiting for Collector', // Handle null collectorId
+        collectorName: sample.collectorId ? sample.collectorId.name : 'Waiting for Collector',
       };
     });
 
     res.status(200).json({ samples: formattedSamples });
   } catch (error) {
-    console.error('Error fetching submitted samples:', error); // Log the detailed error
+    console.error('Error fetching submitted samples:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
