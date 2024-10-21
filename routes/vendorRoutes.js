@@ -218,33 +218,34 @@ router.post('/add-test-type', authenticateToken, authorizeRole('vendor'), async 
 
 
 // Route to get all submitted samples
+
 // routes/vendorRoutes.js
 router.get('/submitted-samples', authenticateToken, authorizeRole('vendor'), async (req, res) => {
-    try {
-      const samples = await SampleRequest.find({})
-        .populate('sampleId', 'type description')
-        .populate('customerId', 'name')
-        .populate('collectorId', 'name');
-  
-      const formattedSamples = samples.map((sample) => {
-        return {
-          sampleId: sample.sampleId._id,
-          sampleType: sample.sampleId.type,
-          description: sample.sampleId.description,
-          customerName: sample.customerId.name,
-          submissionDate: sample.submittedAt,
-          status: sample.status,
-          collectorName: sample.collectorId ? sample.collectorId.name : "Waiting for Collector"
-        };
-      });
-  
-      res.status(200).json({ samples: formattedSamples });
-    } catch (error) {
-      console.error('Error fetching submitted samples:', error); // Log the detailed error
-      res.status(500).json({ message: 'Server error', error: error.message });
-    }
-  });
-  
+  try {
+    const samples = await SampleRequest.find({})
+      .populate('sampleId', 'type description')
+      .populate('customerId', 'name')
+      .populate('collectorId', 'name');
+
+    const formattedSamples = samples.map((sample) => {
+      return {
+        sampleId: sample.sampleId ? sample.sampleId._id : null, // Check for null
+        sampleType: sample.sampleId ? sample.sampleId.type : 'Unknown', // Handle null sampleId
+        description: sample.sampleId ? sample.sampleId.description : 'No description',
+        customerName: sample.customerId ? sample.customerId.name : 'Unknown Customer', // Handle null customerId
+        submissionDate: sample.submittedAt || 'Unknown submission date',
+        status: sample.status || 'Unknown status',
+        collectorName: sample.collectorId ? sample.collectorId.name : 'Waiting for Collector', // Handle null collectorId
+      };
+    });
+
+    res.status(200).json({ samples: formattedSamples });
+  } catch (error) {
+    console.error('Error fetching submitted samples:', error); // Log the detailed error
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
 
 // Route to update sample status by vendor
