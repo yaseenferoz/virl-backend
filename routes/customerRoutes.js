@@ -10,10 +10,18 @@ const User = require('../models/User');
 
 
 // Route for customers to submit a sample for testing
+// Route for customers to submit a sample for testing
 router.post('/submit-sample', authenticateToken, authorizeRole('customer'), async (req, res) => {
   const { sampleId, testTypeId } = req.body;
 
   try {
+    // Fetch the customer's name from the database
+    const customer = await User.findById(req.user.userId).select('name');
+    
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
     const newSampleRequest = new SampleRequest({
       sampleId,
       testTypeId,
@@ -23,11 +31,26 @@ router.post('/submit-sample', authenticateToken, authorizeRole('customer'), asyn
     });
 
     const savedRequest = await newSampleRequest.save();
+
+    // Assuming there's a way to determine which vendor should receive the notification.
+    const vendor = await User.findOne({ role: 'vendor' }); // Adjust this logic to your needs
+
+    // Create notification for the vendor about the new sample submission
+    if (vendor) {
+      await Notification.create({
+        userId: vendor._id,  // The vendor's userId
+        sampleRequestId: savedRequest._id, // The ID of the newly submitted sample
+        message: `A new sample has been submitted by ${customer.name} for testing.`  // Using the fetched customer's name
+      });
+    }
+
     res.status(201).json({ message: 'Sample submitted successfully', sampleRequest: savedRequest });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 // Route to get all submitted samples for the customer
 router.get('/submitted-tests', authenticateToken, authorizeRole('customer'), async (req, res) => {
     try {

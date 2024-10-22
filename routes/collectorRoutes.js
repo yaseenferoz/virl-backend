@@ -14,21 +14,49 @@ router.put('/collect-sample', authenticateToken, authorizeRole('collector'), asy
   const { sampleRequestId } = req.body;
 
   try {
+    // Update the sample request to mark it as collected
     const sampleRequest = await SampleRequest.findByIdAndUpdate(
       sampleRequestId,
       { status: 'Collected', collectorId: req.user.userId }, // Add collectorId here
       { new: true }
-    );
+    ).populate('customerId vendorId'); // Assuming vendorId is associated with the sample request
 
     if (!sampleRequest) {
       return res.status(404).json({ message: 'Sample request not found' });
     }
+
+    // Create notifications for vendor and customer
+    const notifications = [
+      new Notification({
+        userId: sampleRequest.customerId,
+        sampleRequestId: sampleRequest._id,
+        message: `Your sample has been collected by the collector.`
+      }),
+      new Notification({
+        userId: req.user.userId, // Collector notification
+        sampleRequestId: sampleRequest._id,
+        message: `You have collected sample ${sampleRequest._id}.`
+      })
+    ];
+
+    // If vendor exists, notify the vendor about the collection
+    if (sampleRequest.vendorId) {
+      notifications.push(new Notification({
+        userId: sampleRequest.vendorId,
+        sampleRequestId: sampleRequest._id,
+        message: `Sample ${sampleRequest._id} has been collected by the collector.`
+      }));
+    }
+
+    // Insert all notifications
+    await Notification.insertMany(notifications);
 
     res.status(200).json({ message: 'Sample status updated to Collected', sampleRequest });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 // Route to mark sample as collected by collector
 router.put('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
   const { name, password } = req.body;
@@ -62,11 +90,12 @@ router.put('/deliver-sample', authenticateToken, authorizeRole('collector'), asy
   const { sampleRequestId } = req.body;
 
   try {
+    // Update the sample request to mark it as delivered
     const sampleRequest = await SampleRequest.findByIdAndUpdate(
       sampleRequestId,
       { status: 'Sample Received', collectorId: req.user.userId },
       { new: true }
-    );
+    ).populate('customerId vendorId'); // Assuming vendorId is associated with the sample request
 
     if (!sampleRequest) {
       return res.status(404).json({ message: 'Sample request not found' });
@@ -77,24 +106,25 @@ router.put('/deliver-sample', authenticateToken, authorizeRole('collector'), asy
       new Notification({
         userId: sampleRequest.customerId,
         sampleRequestId: sampleRequest._id,
-        message: `Your sample has been delivered by the collector and received by the vendor`
+        message: `Your sample has been delivered by the collector and received by the vendor.`
       }),
       new Notification({
-        userId: req.user.userId,
+        userId: req.user.userId, // Collector notification
         sampleRequestId: sampleRequest._id,
-        message: `Sample ${sampleRequest._id} has been successfully delivered to the vendor`
+        message: `You have successfully delivered sample ${sampleRequest._id} to the vendor.`
       })
     ];
 
-    // If the vendor exists in this flow, create a notification for them as well
+    // If the vendor exists, notify the vendor about the delivery
     if (sampleRequest.vendorId) {
       notifications.push(new Notification({
         userId: sampleRequest.vendorId,
         sampleRequestId: sampleRequest._id,
-        message: `Sample ${sampleRequest._id} has been delivered by the collector`
+        message: `Sample ${sampleRequest._id} has been delivered by the collector.`
       }));
     }
 
+    // Insert all notifications
     await Notification.insertMany(notifications);
 
     res.status(200).json({ message: 'Sample status updated to Sample Received', sampleRequest });
@@ -103,6 +133,7 @@ router.put('/deliver-sample', authenticateToken, authorizeRole('collector'), asy
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 router.get('/profile', authenticateToken, authorizeRole('collector'), async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('name email phone'); // Restrict fields if needed
