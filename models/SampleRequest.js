@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const sampleRequestSchema = new mongoose.Schema({
     sampleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Sample', required: true },
     testTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'TestType', required: true },
+    vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     collectorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional for waiting status
     status: { type: String, enum: ['Submitted', 'Collected', 'Sample Received', 'Sample in Test', 'Sample Tested', 'Sample Delivered'], default: 'Submitted' },
