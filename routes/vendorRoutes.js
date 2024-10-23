@@ -324,33 +324,34 @@ router.get('/profile', authenticateToken, authorizeRole('vendor'), async (req, r
   });
 // Route to get the history of all delivered samples
 router.get('/delivered-samples-history', authenticateToken, authorizeRole('vendor'), async (req, res) => {
-    try {
-      // Find all sample requests with the status "Sample Delivered"
-      const deliveredSamples = await SampleRequest.find({ status: 'Sample Delivered' })
-        .populate('sampleId', 'type description') // Populate sample type and description
-        .populate('customerId', 'name email') // Populate customer details
-        .populate('collectorId', 'name'); // Populate collector name
-  
-      // Format the response to include relevant details
-      const formattedSamples = deliveredSamples.map((sample) => {
-        return {
-          sampleRequestId: sample._id,
-          sampleType: sample.sampleId.type,
-          description: sample.sampleId.description,
-          customerName: sample.customerId.name,
-          customerEmail: sample.customerId.email,
-          collectorName: sample.collectorId ? sample.collectorId.name : "Not Collected",
-          submissionDate: sample.submittedAt,
-          deliveryDate: sample.updatedAt, // Assuming updatedAt is when it was marked as delivered
-        };
-      });
-  
-      res.status(200).json({ deliveredSamplesHistory: formattedSamples });
-    } catch (error) {
-      console.error('Error fetching delivered samples history:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+  try {
+    // Find all sample requests with the status "Sample Delivered"
+    const deliveredSamples = await SampleRequest.find({ status: 'Sample Delivered' })
+      .populate('sampleId', 'type description') // Populate sample type and description
+      .populate('customerId', 'name email') // Populate customer details
+      .populate('collectorId', 'name'); // Populate collector name
+
+    // Format the response to include relevant details, handling null values
+    const formattedSamples = deliveredSamples.map((sample) => {
+      return {
+        sampleRequestId: sample._id,
+        sampleType: sample.sampleId ? sample.sampleId.type : 'Unknown',  // Handle missing sampleId
+        description: sample.sampleId ? sample.sampleId.description : 'No description available',
+        customerName: sample.customerId ? sample.customerId.name : 'Unknown Customer',  // Handle missing customerId
+        customerEmail: sample.customerId ? sample.customerId.email : 'Unknown Email',
+        collectorName: sample.collectorId ? sample.collectorId.name : "Not Collected",  // Handle missing collectorId
+        submissionDate: sample.submittedAt || 'Unknown submission date',
+        deliveryDate: sample.updatedAt || 'Unknown delivery date' // Assuming updatedAt is when it was marked as delivered
+      };
+    });
+
+    res.status(200).json({ deliveredSamplesHistory: formattedSamples });
+  } catch (error) {
+    console.error('Error fetching delivered samples history:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // Route to update sample status by vendor
 router.put('/update-sample-status', authenticateToken, authorizeRole('vendor'), async (req, res) => {
