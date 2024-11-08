@@ -92,9 +92,9 @@ router.get('/dashboard', authenticateToken, authorizeRole('customer'), async (re
           Submitted: 0,
           Collected: 0,
           "Sample Received": 0,
-          "Sample in Test": 0,
-          "Sample Tested": 0,
-          "Sample Delivered": 0,
+          "Test Sample": 0,
+          "Test Completed": 0,
+          "Couriered": 0,
         }
       );
   

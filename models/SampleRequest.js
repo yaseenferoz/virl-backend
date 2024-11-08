@@ -8,7 +8,7 @@ const sampleRequestSchema = new mongoose.Schema({
     vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     collectorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional for waiting status
-    status: { type: String, enum: ['Submitted', 'Collected', 'Sample Received', 'Sample in Test', 'Sample Tested', 'Sample Delivered'], default: 'Submitted' },
+    status: { type: String, enum: ['Submitted', 'Collected', 'Sample Received', 'Test Sample', 'Test Completed', 'Couriered'], default: 'Submitted' },
     submittedAt: { type: Date, default: Date.now },
     reportPath: { type: String } // Path to the generated report file
   });

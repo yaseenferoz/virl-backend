@@ -256,7 +256,7 @@ router.get('/submitted-samples', authenticateToken, authorizeRole('vendor'), asy
 //     const { sampleRequestId, status } = req.body;
 //     console.log('Received sampleRequestId:', sampleRequestId);
   
-//     const allowedStatuses = ["Sample in Test", "Sample Tested", "Sample Delivered"];
+//     const allowedStatuses = ["Test Sample", "Test Completed", "Couriered"];
 //     if (!allowedStatuses.includes(status)) {
 //       console.log('Invalid status provided:', status);
 //       return res.status(400).json({ message: 'Invalid status' });
@@ -325,8 +325,8 @@ router.get('/profile', authenticateToken, authorizeRole('vendor'), async (req, r
 // Route to get the history of all delivered samples
 router.get('/delivered-samples-history', authenticateToken, authorizeRole('vendor'), async (req, res) => {
   try {
-    // Find all sample requests with the status "Sample Delivered"
-    const deliveredSamples = await SampleRequest.find({ status: 'Sample Delivered' })
+    // Find all sample requests with the status "Couriered"
+    const deliveredSamples = await SampleRequest.find({ status: 'Couriered' })
       .populate('sampleId', 'type description') // Populate sample type and description
       .populate('customerId', 'name email') // Populate customer details
       .populate('collectorId', 'name'); // Populate collector name
@@ -356,7 +356,7 @@ router.get('/delivered-samples-history', authenticateToken, authorizeRole('vendo
 // Route to update sample status by vendor
 router.put('/update-sample-status', authenticateToken, authorizeRole('vendor'), async (req, res) => {
   const { sampleRequestId, status } = req.body;
-  const allowedStatuses = ["Sample in Test", "Sample Tested", "Sample Delivered"];
+  const allowedStatuses = ["Test Sample", "Test Completed", "Couriered"];
   if (!allowedStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid status' });
   }
