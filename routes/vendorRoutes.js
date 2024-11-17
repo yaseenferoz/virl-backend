@@ -222,10 +222,12 @@ router.post('/add-test-type', authenticateToken, authorizeRole('vendor'), async 
 // routes/vendorRoutes.js
 router.get('/submitted-samples', authenticateToken, authorizeRole('vendor'), async (req, res) => {
   try {
+    // Fetch samples sorted by `submittedAt` in descending order
     const samples = await SampleRequest.find({})
       .populate('sampleId', 'type description')
       .populate('customerId', 'name')
-      .populate('collectorId', 'name');
+      .populate('collectorId', 'name')
+      .sort({ submittedAt: -1 }); // Sort by `submittedAt` in descending order
 
     const formattedSamples = samples.map((sample) => {
       return {
@@ -246,6 +248,7 @@ router.get('/submitted-samples', authenticateToken, authorizeRole('vendor'), asy
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 
 
