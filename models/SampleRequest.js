@@ -11,7 +11,9 @@ const sampleRequestSchema = new mongoose.Schema({
     status: { type: String, enum: ['Submitted', 'Collected', 'Sample Received', 'Test Sample', 'Test Completed', 'Couriered'], default: 'Submitted' },
     submittedAt: { type: Date, default: Date.now },
     reportPath: { type: String } // Path to the generated report file
-  });
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt
+);
   
 
 module.exports = mongoose.model('SampleRequest', sampleRequestSchema);

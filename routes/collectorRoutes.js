@@ -203,7 +203,7 @@ router.get('/samples-collected', authenticateToken, authorizeRole('collector'), 
     const samplesCollected = await SampleRequest.find({ status: 'Collected' })
       .populate('sampleId', 'type description')
       .populate('customerId', 'name')
-      .sort({ submissionDate: -1 }); // Sort by most recent submission
+      .sort({ updatedAt: -1 }); // Sort by most recently updated first
 
     const formattedSamples = samplesCollected.map((sample) => ({
       sampleRequestId: sample._id,
@@ -222,6 +222,7 @@ router.get('/samples-collected', authenticateToken, authorizeRole('collector'), 
 });
 
 
+
 /// routes/collectorRoutes.js
 
 // Route to get all samples delivered to the vendor by this collector
@@ -230,7 +231,7 @@ router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), 
     const samplesDelivered = await SampleRequest.find({ collectorId: req.user.userId, status: { $ne: 'Collected' } })
       .populate('sampleId', 'type description')
       .populate('customerId', 'name')
-      .sort({ submissionDate: -1 }); // Sort by most recent submission
+      .sort({ updatedAt: -1 }); // Sort by most recently updated first
 
     const formattedSamples = samplesDelivered.map((sample) => ({
       sampleRequestId: sample._id,
@@ -247,6 +248,7 @@ router.get('/samples-delivered', authenticateToken, authorizeRole('collector'), 
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 // routes/collectorRoutes.js
